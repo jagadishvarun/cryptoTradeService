@@ -1,0 +1,16 @@
+node {
+  stage('SCM') {
+    checkout scm
+  }
+    stage ('Build') {
+        sh 'mvn clean install package'
+      } 
+    stage("deploy-Sandbox"){
+    sshagent(['10.0.0.129']){
+  sh "scp -o StrictHostKeyChecking=no target/*.war ubuntu@10.0.0.129:/home/ubuntu/signet/apache-tomcat-8.5.75/webapps/"
+		}
+      }
+    stage('Email Notification'){
+     emailext attachLog: true, body: "${currentBuild.currentResult}: Job ${env.JOB_NAME}\nMore Info can be found here: ${env.BUILD_URL}", subject: "jenkins build:${currentBuild.currentResult}: ${env.JOB_NAME}", to: 'jbn@diamanteblockchain.com'
+   }  
+}
